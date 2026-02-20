@@ -3,3 +3,16 @@ class Propietario:
         self._nombre = nombre.strip()
         self._documento = documento.strip()
         self._telefono = telefono.strip()
+
+    @property
+    def nombre(self) -> str:
+        return self._nombre
+    
+    @property
+    def documento(self) -> str:
+        return self._documento
+    
+    @property
+    def telefono(self) -> str:
+        return self._telefono
+    
