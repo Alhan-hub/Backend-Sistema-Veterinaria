@@ -64,15 +64,17 @@ El desarrollo se organizó por ramas (`feat/`) para trabajo colaborativo:
 ## 📂 Estructura del Proyecto
 
 ```
-veterinaria/
+BACKEND-SISTEMA-VETERINARIA/
 │
 ├── main.py
-├── mascota.py
-├── propietario.py
-├── perro.py
-├── gato.py
-├── ave.py
-├── cita.py
+├── src/
+│   └── entities/
+│       ├── mascota.py
+│       ├── propietario.py
+│       ├── perro.py
+│       ├── gato.py
+│       ├── ave.py
+│       └── cita.py
 └── README.md
 ```
 
