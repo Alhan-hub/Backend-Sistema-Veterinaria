@@ -16,3 +16,5 @@ class Propietario:
     def telefono(self) -> str:
         return self._telefono
     
+    def __str__(self) -> str:
+        return f"Propietario: {self._nombre}  Documento: {self._documento}"
