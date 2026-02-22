@@ -3,6 +3,7 @@ from entities import Propietario
 class Mascota:
     def __init__(self, nombre:str, edad:int, raza:str, propietario:Propietario) -> None:
         self.validar_edad(edad)
+        self.validar_propietario(propietario)
         self._nombre = nombre.strip()
         self._edad = edad
         self._raza = raza.strip()
@@ -27,3 +28,7 @@ class Mascota:
     def validar_edad(self, edad:int) -> None:
         if edad < 0:
             raise ValueError("La edad de su mascota no puede ser negativa")
+        
+    def validar_propietario(self, propietario:Propietario) -> None:
+        if propietario is None:
+            raise ValueError("No se puede registrar mascota sin propietario")
