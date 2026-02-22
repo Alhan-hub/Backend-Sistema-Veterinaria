@@ -22,3 +22,6 @@ class Cita:
     @property
     def costo(self) -> float:
         return self._costo
+
+    def generar_recibo(self) -> str:
+        return f"Cita: {self._id_cita} | Mascota: {self._id_mascota} | Motivo: {self._motivo} | Costo: {self._costo}"
