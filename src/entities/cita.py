@@ -1,4 +1,8 @@
 class Cita:
+    """
+    Gestiona la agenda y facturacion de consultas veterinarias
+    """
+
     def __init__(
         self, id_cita: str, id_mascota: str, motivo: str, costo: float
     ) -> None:
