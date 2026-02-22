@@ -6,3 +6,19 @@ class Cita:
         self._id_mascota = id_mascota
         self._motivo = motivo
         self._costo = costo
+
+    @property
+    def id_cita(self) -> str:
+        return self._id_cita
+
+    @property
+    def id_mascota(self) -> str:
+        return self._id_mascota
+
+    @property
+    def motivo(self) -> str:
+        return self._motivo
+
+    @property
+    def costo(self) -> float:
+        return self._costo
