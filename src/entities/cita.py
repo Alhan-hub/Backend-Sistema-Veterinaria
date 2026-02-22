@@ -6,6 +6,10 @@ class Cita:
     def __init__(
         self, id_cita: str, id_mascota: str, motivo: str, costo: float
     ) -> None:
+
+        if costo < 0:
+            raise ValueError("El costo de la cita no puede ser negativo")
+
         self._id_cita = id_cita
         self._id_mascota = id_mascota
         self._motivo = motivo
