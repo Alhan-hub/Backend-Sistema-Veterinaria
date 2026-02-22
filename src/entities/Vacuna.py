@@ -1,13 +1,14 @@
 from datetime import date
 from decimal import Decimal
-
+from entities import Mascota
 class Vacuna:
 
-    def __init__(self, fecha: date, nombre_vacuna: str, costo: Decimal) -> None:
+    def __init__(self, fecha: date, nombre_vacuna: str, costo: Decimal, mascota:Mascota) -> None:
         self.validar_costo(costo)
         self._fecha = fecha
         self._nombre_vacuna = nombre_vacuna.strip()
         self._costo = costo
+        self._mascota = mascota
 
     @property
     def fecha(self) -> date:
