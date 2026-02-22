@@ -1,4 +1,4 @@
-from entities.Mascota import Mascota
+from entities import Mascota
 from entities import Propietario
 
 
