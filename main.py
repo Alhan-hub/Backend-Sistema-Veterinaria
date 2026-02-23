@@ -10,6 +10,50 @@ from src.entities.vacuna import Vacuna
 TipoMascota = Perro | Gato | Ave
 
 
+def validar_texto_no_vacio(texto: str) -> bool:
+    return len(texto.strip()) > 0
+
+
+def validar_entero(valor_str: str) -> tuple[bool, int]:
+    s = valor_str.strip()
+    if not s or not s.isdigit():
+        return False, 0
+    return True, int(s)
+
+
+def validar_monto(monto_str: str) -> tuple[bool, float]:
+    s = monto_str.strip()
+    if not s:
+        return False, 0.0
+    partes = s.split(".")
+    if len(partes) > 2:
+        return False, 0.0
+    for p in partes:
+        if not p.isdigit():
+            return False, 0.0
+    return True, float(s)
+
+
+def validar_decimal(monto_str: str) -> tuple[bool, Decimal]:
+    ok, valor = validar_monto(monto_str)
+    if not ok:
+        return False, Decimal("0")
+    return True, Decimal(monto_str.strip())
+
+
+def validar_fecha(fecha_str: str) -> tuple[bool, date]:
+    partes = fecha_str.strip().split("-")
+    if len(partes) != 3:
+        return False, date.today()
+    ok_y, y = validar_entero(partes[0])
+    ok_m, m = validar_entero(partes[1])
+    ok_d, d = validar_entero(partes[2])
+    if ok_y and ok_m and ok_d:
+        if 1 <= m <= 12 and 1 <= d <= 31:
+            return True, date(y, m, d)
+    return False, date.today()
+
+
 def menu() -> None:
     print("\n--- SISTEMA VETERINARIA ---")
     print("1. Registrar Propietario")
@@ -116,3 +160,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
