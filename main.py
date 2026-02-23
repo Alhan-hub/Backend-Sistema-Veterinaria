@@ -64,10 +64,6 @@ def menu() -> None:
 
 
 def main() -> None:
-    """
-    Controlador principal del programa. 
-    Usa diccionarios para persistencia en memoria.
-    """
     propietarios: dict[str, Propietario] = {}
     mascotas: dict[str, TipoMascota] = {}
     citas: dict[str, Cita] = {}
@@ -78,6 +74,9 @@ def main() -> None:
 
         if opcion == "1":
             doc = input("Documento: ").strip()
+            if doc in propietarios:
+                print(f"Error: El propietario con documento {doc} ya está registrado.")
+                continue
             nom = input("Nombre: ").strip()
             tel = input("Teléfono: ").strip()
             eml = input("Email: ").strip()
@@ -96,6 +95,9 @@ def main() -> None:
             print("Tipo: 1. Perro | 2. Gato | 3. Ave")
             tipo = input("Seleccione: ")
             nombre_m = input("Nombre mascota: ")
+            if nombre_m in mascotas:
+                print(f"Error: La mascota '{nombre_m}' ya se encuentra en el sistema.")
+                continue
             raza_m = input("Raza/Especie: ")
             edad_s = input("Edad (años): ")
 
@@ -160,4 +162,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 
