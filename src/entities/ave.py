@@ -1,8 +1,8 @@
-from entities.Mascota import Mascota
+from entities import Mascota
 from entities import Propietario
 
 
-class Perro(Mascota):
+class Ave(Mascota):
     def __init__(
         self, nombre: str, edad: int, raza: str, propietario: Propietario
     ) -> None:
