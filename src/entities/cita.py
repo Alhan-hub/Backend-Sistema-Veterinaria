@@ -1,0 +1,27 @@
+import uuid
+
+from sqlalchemy import Column, DateTime, String, Float, ForeignKey, func
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+
+from src.database.config import Base
+
+
+class Cita(Base):
+    """Modelo de cita veterinaria"""
+
+    __tablename__ = "cita"
+
+    id_cita = Column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True
+    )
+    id_mascota = Column(
+        UUID(as_uuid=True), ForeignKey("mascota.id_mascota"), nullable=False
+    )
+    id_usuario_agenda = Column(
+        UUID(as_uuid=True), ForeignKey("usuario.id_usuario"), nullable=False
+    )
+
+    fecha_hora = Column(DateTime(timezone=True), server_default=func.now())
+    motivo = Column(String(255))
+    costo = Column(Float)
