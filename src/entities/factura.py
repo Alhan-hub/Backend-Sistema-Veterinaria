@@ -8,7 +8,12 @@ from src.database.config import Base
 
 
 class Factura(Base):
-    """Modelo de factura"""
+    """
+    Modelo de factura veterinaria.
+
+    Representa el comprobante de pago generado a partir de una cita.
+    Cada factura esta asociada a una cita especifica y es generada por un usuario del sistema.
+    """
 
     __tablename__ = "factura"
 

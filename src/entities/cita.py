@@ -8,7 +8,12 @@ from src.database.config import Base
 
 
 class Cita(Base):
-    """Modelo de cita veterinaria"""
+    """
+    Modelo de cita veterinaria.
+
+    Representa una consulta agendada para una mascota.
+    Cada cita está asociada a una mascota y es registrada por un usuario.
+    """
 
     __tablename__ = "cita"
 
