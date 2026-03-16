@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Column, DateTime, String, Float, ForeignKey, func
+from sqlalchemy import Column, DateTime, String, Numeric, ForeignKey, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -25,6 +25,6 @@ class Factura(Base):
         UUID(as_uuid=True), ForeignKey("usuario.id_usuario"), nullable=False
     )
 
-    total = Column(Float, nullable=False)
+    total = Column(Numeric(10, 2), nullable=False)  # ✅ CAMBIADO: Float → Numeric
     metodo_pago = Column(String(50))
     fecha_pago = Column(DateTime(timezone=True), server_default=func.now())
