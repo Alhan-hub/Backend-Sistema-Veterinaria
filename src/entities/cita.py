@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Column, DateTime, String, Float, ForeignKey, func
+from sqlalchemy import Column, DateTime, String, Numeric, ForeignKey, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -29,4 +29,4 @@ class Cita(Base):
 
     fecha_hora = Column(DateTime(timezone=True), server_default=func.now())
     motivo = Column(String(255))
-    costo = Column(Float)
+    costo = Column(Numeric(10, 2))
