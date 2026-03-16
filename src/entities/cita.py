@@ -28,5 +28,7 @@ class Cita(Base):
     )
 
     fecha_hora = Column(DateTime(timezone=True), server_default=func.now())
+    lugar = Column(String(100))
     motivo = Column(String(255))
     costo = Column(Numeric(10, 2))
+    estado = Column(String(20), default="pendiente")
