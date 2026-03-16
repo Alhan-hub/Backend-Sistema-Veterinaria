@@ -20,11 +20,16 @@ class Factura(Base):
     id_factura = Column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True
     )
-    id_cita = Column(UUID(as_uuid=True), ForeignKey("cita.id_cita"), nullable=False)
+    id_cita = Column(
+        UUID(as_uuid=True), ForeignKey("cita.id_cita"), nullable=False, unique=True
+    )
+    id_propietario = Column(
+        UUID(as_uuid=True), ForeignKey("propietario.id_propietario"), nullable=False
+    )
     id_usuario_genera = Column(
         UUID(as_uuid=True), ForeignKey("usuario.id_usuario"), nullable=False
     )
 
-    total = Column(Numeric(10, 2), nullable=False)  # ✅ CAMBIADO: Float → Numeric
+    total = Column(Numeric(10, 2), nullable=False)
     metodo_pago = Column(String(50))
     fecha_pago = Column(DateTime(timezone=True), server_default=func.now())
