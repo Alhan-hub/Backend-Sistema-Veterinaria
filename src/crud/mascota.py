@@ -28,3 +28,12 @@ def crear(
     db.commit()
     db.refresh(mascota)
     return mascota
+
+
+def obtener_por_id(id_mascota: UUID) -> Optional[Mascota]:
+    return db.query(Mascota).filter(Mascota.id_mascota == id_mascota).first()
+
+
+def obtener_todos() -> List[Mascota]:
+    return db.query(Mascota).all()
+
