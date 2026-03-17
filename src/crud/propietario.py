@@ -47,3 +47,12 @@ def actualizar(
     db.commit()
     db.refresh(propietario)
     return propietario
+
+
+def eliminar(id_propietario: UUID) -> bool:
+    propietario = obtener_por_id(id_propietario)
+    if not propietario:
+        return False
+    db.delete(propietario)
+    db.commit()
+    return True
