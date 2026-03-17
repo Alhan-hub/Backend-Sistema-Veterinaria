@@ -54,3 +54,11 @@ def actualizar(
     db.refresh(mascota)
     return mascota
 
+
+def eliminar(id_mascota: UUID) -> bool:
+    mascota = obtener_por_id(id_mascota)
+    if not mascota:
+        return False
+    db.delete(mascota)
+    db.commit()
+    return True
