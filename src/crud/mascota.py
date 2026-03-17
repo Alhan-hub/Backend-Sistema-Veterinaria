@@ -37,3 +37,20 @@ def obtener_por_id(id_mascota: UUID) -> Optional[Mascota]:
 def obtener_todos() -> List[Mascota]:
     return db.query(Mascota).all()
 
+
+def actualizar(
+    id_mascota: UUID,
+    id_usuario_edita: UUID,
+    **kwargs: dict,
+) -> Optional[Mascota]:
+    mascota = obtener_por_id(id_mascota)
+    if not mascota:
+        return None
+    for key, value in kwargs.items():
+        if hasattr(mascota, key):
+            setattr(mascota, key, value)
+    mascota.id_usuario_edita = id_usuario_edita
+    db.commit()
+    db.refresh(mascota)
+    return mascota
+
