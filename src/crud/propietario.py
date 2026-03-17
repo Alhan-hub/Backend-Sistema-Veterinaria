@@ -22,3 +22,11 @@ def crear(
     db.commit()
     db.refresh(propietario)
     return propietario
+
+
+def obtener_por_id(id_producto: UUID) -> Optional[Propietario]:
+    return db.query(Propietario).filter(Propietario.id_producto == id_producto).first()
+
+
+def obtener_todos() -> List[Propietario]:
+    return db.query(Propietario).all()
