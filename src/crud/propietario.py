@@ -12,10 +12,12 @@ def crear(
     telefono: str,
     email: Optional[str] = None,
 ) -> Propietario:
+    if not nombre.strip():
+        raise ValueError("El nombre es obligatorio")
     propietario = Propietario(
         nombre=nombre.strip(),
         id_usuario_creacion=id_usuario_creacion,
-        telefono = telefono.strip()
+        telefono=telefono.strip(),
         email=email.strip() if email else None,
     )
     db.add(propietario)
@@ -24,8 +26,8 @@ def crear(
     return propietario
 
 
-def obtener_por_id(id_producto: UUID) -> Optional[Propietario]:
-    return db.query(Propietario).filter(Propietario.id_producto == id_producto).first()
+def obtener_por_id(id_propietario: UUID) -> Optional[Propietario]:
+    return db.query(Propietario).filter(Propietario.id_propietario == id_propietario).first()
 
 
 def obtener_todos() -> List[Propietario]:
