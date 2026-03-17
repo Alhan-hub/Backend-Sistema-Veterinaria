@@ -30,3 +30,20 @@ def obtener_por_id(id_producto: UUID) -> Optional[Propietario]:
 
 def obtener_todos() -> List[Propietario]:
     return db.query(Propietario).all()
+
+
+def actualizar(
+    id_propietario: UUID,
+    id_usuario_edita: UUID,
+    **kwargs: dict,
+) -> Optional[Propietario]:
+    propietario = obtener_por_id(id_propietario)
+    if not propietario:
+        return None
+    for key, value in kwargs.items():
+        if hasattr(propietario, key):
+            setattr(propietario, key, value)
+    propietario.id_usuario_edita = id_usuario_edita
+    db.commit()
+    db.refresh(propietario)
+    return propietario
