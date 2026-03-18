@@ -114,7 +114,7 @@ def main():
             costo_s = input("Costo: ")
             
             ok_u, uid_m = validar_uuid(id_m_s)
-            
+            ok_c, val_c = validar_numero(costo_s)
             
             if ok_u and ok_c:
                 v = vacuna.crear(nom_v, val_c, UUID(uid_m), user_actual.id_usuario)
