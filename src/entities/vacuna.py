@@ -5,8 +5,12 @@ from src.database.config import Base
 
 
 class Vacuna(Base):
+    """
+    Modelo de vacuna veterinaria.
+    Representa una vacuna aplicada a una mascota.
+    """
 
-    __tablename__ = "vacuna"
+    __tabraname__ = "vacuna"  # 👈 OJO: aquí hay un typo!
 
     id_vacuna = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     nombre = Column(String(100), nullable=False)
