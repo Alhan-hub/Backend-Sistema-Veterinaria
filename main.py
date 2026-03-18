@@ -1,28 +1,19 @@
-from datetime import date
-from decimal import Decimal
-from src.entities.propietario import Propietario
-from src.entities.perro import Perro
-from src.entities.gato import Gato
-from src.entities.ave import Ave
-from src.entities.cita import Cita
-from src.entities.vacuna import Vacuna
-
-TipoMascota = Perro | Gato | Ave
+import os
+from uuid import UUID
+from src.crud import usuario, propietario, mascota, cita, factura, vacuna
 
 
-def validar_texto_no_vacio(texto: str) -> bool:
-    return len(texto.strip()) > 0
+def validar_uuid(valor: str) -> tuple[bool, str]:
+    """Valida formato básico de UUID (longitud y guiones)."""
+    s = valor.strip()
+    if len(s) == 36 and s.count("-") == 4:
+        return True, s
+    return False, ""
 
 
-def validar_entero(valor_str: str) -> tuple[bool, int]:
-    s = valor_str.strip()
-    if not s or not s.isdigit():
-        return False, 0
-    return True, int(s)
-
-
-def validar_monto(monto_str: str) -> tuple[bool, float]:
-    s = monto_str.strip()
+def validar_numero(valor: str) -> tuple[bool, float]:
+    """Valida números decimales manualmente para costos."""
+    s = valor.strip()
     if not s:
         return False, 0.0
     partes = s.split(".")
@@ -34,129 +25,103 @@ def validar_monto(monto_str: str) -> tuple[bool, float]:
     return True, float(s)
 
 
-def validar_decimal(monto_str: str) -> tuple[bool, Decimal]:
-    ok, valor = validar_monto(monto_str)
-    if not ok:
-        return False, Decimal("0")
-    return True, Decimal(monto_str.strip())
+def limpiar_pantalla():
+    os.system("cls" if os.name == "nt" else "clear")
 
 
-def validar_fecha(fecha_str: str) -> tuple[bool, date]:
-    partes = fecha_str.strip().split("-")
-    if len(partes) != 3:
-        return False, date.today()
-    ok_y, y = validar_entero(partes[0])
-    ok_m, m = validar_entero(partes[1])
-    ok_d, d = validar_entero(partes[2])
-    if ok_y and ok_m and ok_d:
-        if 1 <= m <= 12 and 1 <= d <= 31:
-            return True, date(y, m, d)
-    return False, date.today()
+def main():
+    # Paso 0: Identificación del Usuario (Para Auditoría)
+    print("--- ACCESO AL SISTEMA VETERINARIO ---")
+    u_nom = input("Nombre de usuario (login): ").strip()
+    user_actual = usuario.obtener_por_nombre_usuario(u_nom)
 
-
-def menu() -> None:
-    print("\n--- SISTEMA VETERINARIA ---")
-    print("1. Registrar Propietario")
-    print("2. Registrar Mascota (Perro/Gato/Ave)")
-    print("3. Registrar Vacuna")
-    print("4. Agendar Cita (Facturar)")
-    print("5. Salir")
-
-
-def main() -> None:
-    propietarios: dict[str, Propietario] = {}
-    mascotas: dict[str, TipoMascota] = {}
-    citas: dict[str, Cita] = {}
+    if not user_actual:
+        print("Usuario no encontrado. Creando usuario inicial...")
+        user_actual = usuario.crear(u_nom.capitalize(), u_nom, "admin123", f"{u_nom}@vet.com")
+        print(f"Usuario {u_nom} creado con ID: {user_actual.id_usuario}")
 
     while True:
-        menu()
-        opcion = input("Seleccione una opción: ").strip()
+        print(f"\nSESIÓN: {user_actual.nombre_usuario} | ID: {user_actual.id_usuario}")
+        print("1. Gestionar Propietarios (CRUD)")
+        print("2. Gestionar Mascotas (CRUD)")
+        print("3. Agendar Cita y Facturar")
+        print("4. Registro de Vacunas")
+        print("5. Salir")
+        
+        op = input("Seleccione: ").strip()
 
-        if opcion == "1":
-            doc = input("Documento: ").strip()
-            if doc in propietarios:
-                print(f"Error: El propietario con documento {doc} ya está registrado.")
-                continue
-            nom = input("Nombre: ").strip()
-            tel = input("Teléfono: ").strip()
-            eml = input("Email: ").strip()
-            if validar_texto_no_vacio(doc) and validar_texto_no_vacio(nom):
-                propietarios[doc] = Propietario(nom, doc, tel, eml)
-                print("Propietario registrado.")
-            else:
-                print("Error: Documento y nombre son obligatorios.")
+        if op == "1":
+            print("\n[1] Crear Propietario | [2] Listar | [3] Editar | [4] Eliminar")
+            sub_op = input("Seleccione: ")
+            
+            if sub_op == "1":
+                nom = input("Nombre: ")
+                tel = input("Teléfono: ")
+                p = propietario.crear(nom, user_actual.id_usuario, tel)
+                print(f"Creado. ID: {p.id_propietario}. Verifique en Neon.")
+            
+            elif sub_op == "2":
+                for p in propietario.obtener_todos():
+                    print(f"ID: {p.id_propietario} | {p.nombre} | Creado por: {p.id_usuario_creacion}")
+            
+            elif sub_op == "3":
+                id_s = input("ID del propietario a editar: ")
+                ok, uid = validar_uuid(id_s)
+                if ok:
+                    nuevo_tel = input("Nuevo teléfono: ")
+                    propietario.actualizar(UUID(uid), user_actual.id_usuario, telefono=nuevo_tel)
+                    print("Actualizado.")
+            
+            elif sub_op == "4":
+                id_s = input("ID a eliminar: ")
+                ok, uid = validar_uuid(id_s)
+                if ok and propietario.eliminar(UUID(uid)):
+                    print("Eliminado de la base de datos.")
 
-        elif opcion == "2":
-            doc_p = input("Documento del dueño: ").strip()
-            if doc_p not in propietarios:
-                print("Error: El propietario no existe.")
-                continue
+        elif op == "2":
+            print("\n--- GESTIÓN DE MASCOTAS ---")
+            nom_m = input("Nombre mascota: ")
+            id_p_s = input("ID Propietario (UUID): ")
+            tipo = input("Tipo (Perro/Gato/Ave): ")
+            edad = input("Edad: ")
+            
+            ok_u, uid_p = validar_uuid(id_p_s)
+            if ok_u:
+                m = mascota.crear(nom_m, UUID(uid_p), user_actual.id_usuario, int(edad), tipo)
+                print(f"Mascota {m.nombre} registrada. ID: {m.id_mascota}")
 
-            print("Tipo: 1. Perro | 2. Gato | 3. Ave")
-            tipo = input("Seleccione: ")
-            nombre_m = input("Nombre mascota: ")
-            if nombre_m in mascotas:
-                print(f"Error: La mascota '{nombre_m}' ya se encuentra en el sistema.")
-                continue
-            raza_m = input("Raza/Especie: ")
-            edad_s = input("Edad (años): ")
-
-            ok_e, edad = validar_entero(edad_s)
-            if not ok_e:
-                print("Error: Edad debe ser un número.")
-                continue
-
-            propietario_obj = propietarios[doc_p]
-            if tipo == "1":
-                mascotas[nombre_m] = Perro(nombre_m, edad, raza_m, propietario_obj)
-            elif tipo == "2":
-                mascotas[nombre_m] = Gato(nombre_m, edad, raza_m, propietario_obj)
-            elif tipo == "3":
-                mascotas[nombre_m] = Ave(nombre_m, edad, raza_m, propietario_obj)
-            print(f"Mascota {nombre_m} registrada.")
-
-        elif opcion == "3":
-            nom_m = input("Nombre de la mascota: ").strip()
-            if nom_m not in mascotas:
-                print("Error: Mascota no encontrada.")
-                continue
-
-            f_str = input("Fecha (YYYY-MM-DD): ")
-            ok_f, fecha = validar_fecha(f_str)
-            if not ok_f:
-                print("Error: Formato de fecha inválido.")
-                continue
-
-            v_nom = input("Nombre de la vacuna: ")
-            costo_s = input("Costo vacuna: ")
-            ok_c, costo_dec = validar_decimal(costo_s)
-
-            if ok_c:
-                nueva_v = Vacuna(fecha, v_nom, costo_dec, mascotas[nom_m])
-                print(f"Vacuna {v_nom} registrada por ${costo_dec}.")
-            else:
-                print("Error: Costo inválido.")
-
-        elif opcion == "4":
-            id_c = input("ID de la cita: ")
-            nom_m = input("Nombre de la mascota: ")
-            if nom_m not in mascotas:
-                print("Error: Registre la mascota primero.")
-                continue
-
+        elif op == "3":
+            print("\n--- AGENDAR CITA ---")
+            id_m_s = input("ID Mascota (UUID): ")
             motivo = input("Motivo: ")
-            costo_s = input("Costo consulta: ")
-            ok_c, costo_f = validar_monto(costo_s)
+            costo_s = input("Costo: ")
+            
+            ok_u, uid_m = validar_uuid(id_m_s)
+            ok_c, val_c = validar_numero(costo_s)
+            
+            if ok_u and ok_c:
+                nueva_cita = cita.crear(UUID(uid_m), user_actual.id_usuario, motivo, val_c)
+                print(f"Cita agendada: {nueva_cita.id_cita}")
+                
+                # Facturación automática
+                fact = factura.crear(nueva_cita.id_cita, nueva_cita.id_mascota, user_actual.id_usuario, val_c, "Efectivo")
+                print(f"Factura generada: {fact.id_factura} por ${fact.total}")
 
-            if ok_c:
-                citas[id_c] = Cita(id_c, nom_m, motivo, costo_f)
-                print("\n--- FACTURA GENERADA ---")
-                print(citas[id_c].generar_recibo())
-            else:
-                print("Error: Costo inválido.")
+        elif op == "4":
+            print("\n--- REGISTRO DE VACUNAS ---")
+            nom_v = input("Nombre Vacuna: ")
+            id_m_s = input("ID Mascota (UUID): ")
+            costo_s = input("Costo: ")
+            
+            ok_u, uid_m = validar_uuid(id_m_s)
+            
+            
+            if ok_u and ok_c:
+                v = vacuna.crear(nom_v, val_c, UUID(uid_m), user_actual.id_usuario)
+                print(f"Vacuna {v.nombre} registrada correctamente.")
 
-        elif opcion == "5":
-            print("Saliendo del sistema...")
+        elif op == "5":
+            print("Cerrando sistema...")
             break
 
 
