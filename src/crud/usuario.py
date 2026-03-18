@@ -1,93 +1,87 @@
 from typing import List, Optional
 from uuid import UUID
 from src.database.config import SessionLocal
-import src.entities.usuario
+from src.entities.usuario import Usuario
+
+db = SessionLocal()
 
 
 def crear(
     nombre: str, nombre_usuario: str, clave: str, email: str
-) -> src.entities.usuario.Usuario:
-    db = SessionLocal()
-    usuario = src.entities.usuario.Usuario(
-        nombre=nombre,
-        nombre_usuario=nombre_usuario,
-        clave=clave,
-        email=email,
-    )
+) -> Optional[Usuario]:
+    if existe_nombre_usuario(nombre_usuario):
+        print("Error: El nombre de usuario ya existe")
+        return None
+    if existe_email(email):
+        print("Error: El email ya existe")
+        return None
 
+    usuario = Usuario(
+        nombre=nombre.strip(),
+        nombre_usuario=nombre_usuario.strip().lower(),
+        clave=clave,
+        email=email.strip().lower(),
+    )
     db.add(usuario)
     db.commit()
     db.refresh(usuario)
-    db.close()
     return usuario
 
 
-def obtener_por_id(id_usuario: UUID) -> Optional[src.entities.usuario.Usuario]:
-    db = SessionLocal()
-    usuario = (
-        db.query(src.entities.usuario.Usuario)
-        .filter(src.entities.usuario.Usuario.id_usuario == id_usuario)
-        .first()
-    )
-    db.close()
-    return usuario
+def obtener_por_id(id_usuario: UUID) -> Optional[Usuario]:
+    return db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
 
 
-def obtener_todos() -> List[src.entities.usuario.Usuario]:
-    db = SessionLocal()
-    usuarios = db.query(src.entities.usuario.Usuario).all()
-    db.close()
-    return usuarios
+def obtener_todos() -> List[Usuario]:
+    return db.query(Usuario).all()
 
 
-def obtener_por_nombre_usuario(
-    nombre_usuario: str,
-) -> Optional[src.entities.usuario.Usuario]:
-    db = SessionLocal()
-    usuario = (
-        db.query(src.entities.usuario.Usuario)
-        .filter(src.entities.usuario.Usuario.nombre_usuario == nombre_usuario)
-        .first()
-    )
-    db.close()
-    return usuario
-
-
-def actualizar(id_usuario: UUID, **kwargs) -> Optional[src.entities.usuario.Usuario]:
-    db = SessionLocal()
-    usuario = (
-        db.query(src.entities.usuario.Usuario)
-        .filter(src.entities.usuario.Usuario.id_usuario == id_usuario)
+def obtener_por_nombre_usuario(nombre_usuario: str) -> Optional[Usuario]:
+    return (
+        db.query(Usuario)
+        .filter(Usuario.nombre_usuario == nombre_usuario.strip().lower())
         .first()
     )
 
+
+def actualizar(id_usuario: UUID, **kwargs) -> Optional[Usuario]:
+    usuario = obtener_por_id(id_usuario)
     if not usuario:
-        db.close()
         return None
 
     for key, value in kwargs.items():
-        if hasattr(usuario, key):
+        if hasattr(usuario, key) and value is not None:
+            if key in ["nombre", "nombre_usuario", "email"]:
+                value = value.strip()
+                if key in ["nombre_usuario", "email"]:
+                    value = value.lower()
             setattr(usuario, key, value)
 
     db.commit()
     db.refresh(usuario)
-    db.close()
     return usuario
 
 
 def eliminar(id_usuario: UUID) -> bool:
-    db = SessionLocal()
-    usuario = (
-        db.query(src.entities.usuario.Usuario)
-        .filter(src.entities.usuario.Usuario.id_usuario == id_usuario)
-        .first()
-    )
-
+    usuario = obtener_por_id(id_usuario)
     if not usuario:
-        db.close()
         return False
-
     db.delete(usuario)
     db.commit()
-    db.close()
     return True
+
+
+def existe_nombre_usuario(nombre_usuario: str) -> bool:
+    return (
+        db.query(Usuario)
+        .filter(Usuario.nombre_usuario == nombre_usuario.strip().lower())
+        .first()
+        is not None
+    )
+
+
+def existe_email(email: str) -> bool:
+    return (
+        db.query(Usuario).filter(Usuario.email == email.strip().lower()).first()
+        is not None
+    )
