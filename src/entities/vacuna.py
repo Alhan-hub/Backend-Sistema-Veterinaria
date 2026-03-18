@@ -5,6 +5,7 @@ from src.database.config import Base
 
 
 class Vacuna(Base):
+
     __tablename__ = "vacuna"
 
     id_vacuna = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
