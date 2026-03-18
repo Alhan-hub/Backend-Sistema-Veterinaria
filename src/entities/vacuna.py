@@ -10,7 +10,7 @@ class Vacuna(Base):
     Representa una vacuna aplicada a una mascota.
     """
 
-    __tabraname__ = "vacuna"  # 👈 OJO: aquí hay un typo!
+    __tablename__ = "vacuna"
 
     id_vacuna = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     nombre = Column(String(100), nullable=False)
