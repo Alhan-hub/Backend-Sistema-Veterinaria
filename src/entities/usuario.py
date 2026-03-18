@@ -16,10 +16,8 @@ class Usuario(Base):
         nombre_usuario: Nombre de usuario para login (único)
         clave: Contraseña hasheada del usuario
         email: Correo electrónico del usuario (único)
-        created_at: Fecha y hora de creación
-        updated_at: Fecha y hora de última actualización
-        created_by: Usuario que creó el registro
-        updated_by: Último usuario que actualizó
+        fecha_creacion: Fecha y hora de creación
+        fecha_edicion: Fecha y hora de última actualización
     """
 
     __tablename__ = "usuario"
@@ -30,10 +28,10 @@ class Usuario(Base):
     clave = Column(String(255), nullable=False)
     email = Column(String(100), unique=True, nullable=False)
 
-    created_at = Column(
+    fecha_creacion = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
-    updated_at = Column(
+    fecha_edicion = Column(
         DateTime(timezone=True),
         onupdate=func.now(),
         server_default=func.now(),
