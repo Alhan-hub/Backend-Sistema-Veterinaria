@@ -39,5 +39,3 @@ class Usuario(Base):
         server_default=func.now(),
         nullable=False,
     )
-    created_by = Column(UUID(as_uuid=True), nullable=True)
-    updated_by = Column(UUID(as_uuid=True), nullable=True)
