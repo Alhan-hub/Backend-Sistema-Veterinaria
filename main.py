@@ -30,7 +30,6 @@ def limpiar_pantalla():
 
 
 def main():
-    # Paso 0: Identificación del Usuario (Para Auditoría)
     print("--- ACCESO AL SISTEMA VETERINARIO ---")
     u_nom = input("Nombre de usuario (login): ").strip()
     user_actual = usuario.obtener_por_nombre_usuario(u_nom)
@@ -103,7 +102,6 @@ def main():
                 nueva_cita = cita.crear(UUID(uid_m), user_actual.id_usuario, motivo, val_c)
                 print(f"Cita agendada: {nueva_cita.id_cita}")
                 
-                # Facturación automática
                 fact = factura.crear(nueva_cita.id_cita, nueva_cita.id_mascota, user_actual.id_usuario, val_c, "Efectivo")
                 print(f"Factura generada: {fact.id_factura} por ${fact.total}")
 
