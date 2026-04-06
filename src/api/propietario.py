@@ -12,7 +12,6 @@ router = APIRouter(prefix="/propietarios", tags=["propietarios"])
 
 
 class PropietarioCreate(BaseModel):
-    id_propietario: UUID
     nombre: str
     telefono: str
     email: Optional[str] = None
@@ -64,7 +63,7 @@ def crear_propietario(body: PropietarioCreate) -> PropietarioRead:
 
 
 @router.put("/{id_propietario}", response_model=PropietarioRead)
-def actualizar_propietario(id_propietario: UUID, body: PropietarioUpdate):
+def actualizar_propietario(id_propietario: UUID, body: PropietarioUpdate) -> PropietarioRead:
     id_edita = body.id_usuario_edita
     data = body.model_dump(exclude_unset=True, exclude={"id_usuario_edita"})
     propietario = crud_propietario.actualizar(id_propietario, id_usuario_edita=id_edita, **data)
