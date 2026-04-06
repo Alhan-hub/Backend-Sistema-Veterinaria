@@ -3,6 +3,7 @@ from uuid import UUID
 
 from src.database.config import SessionLocal
 from src.entities.propietario import Propietario
+from sqlalchemy.orm import Session
 
 db = SessionLocal()
 
@@ -30,8 +31,8 @@ def obtener_por_id(id_propietario: UUID) -> Optional[Propietario]:
     return db.query(Propietario).filter(Propietario.id_propietario == id_propietario).first()
 
 
-def obtener_todos() -> List[Propietario]:
-    return db.query(Propietario).all()
+def obtener_todos(db: Session, skip: int = 0, limit: int = 100) -> List[Propietario]:
+    return db.query(Propietario).offset(skip).limit(limit).all()
 
 
 def actualizar(
