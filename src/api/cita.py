@@ -1,10 +1,16 @@
+"""
+Endpoints para la entidad Cita.
+"""
+
 from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict
+from sqlalchemy.orm import Session
 
+from src.database.config import get_db
 from src.crud import cita as crud_cita
 
 router = APIRouter(prefix="/citas", tags=["citas"])
@@ -39,13 +45,15 @@ class CitaRead(BaseModel):
 
 
 @router.get("", response_model=List[CitaRead])
-def listar_citas(skip: int = 0, limit: int = 100) -> List[CitaRead]:
-    return crud_cita.listar(skip=skip, limit=limit)
+def listar_citas(
+    skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
+) -> List[CitaRead]:
+    return crud_cita.listar(db, skip=skip, limit=limit)
 
 
 @router.get("/{id_cita}", response_model=CitaRead)
-def obtener_cita(id_cita: UUID) -> CitaRead:
-    c = crud_cita.obtener(id_cita)
+def obtener_cita(id_cita: UUID, db: Session = Depends(get_db)) -> CitaRead:
+    c = crud_cita.obtener(db, id_cita)
     if not c:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Cita no encontrada"
@@ -54,20 +62,26 @@ def obtener_cita(id_cita: UUID) -> CitaRead:
 
 
 @router.post("", response_model=CitaRead, status_code=status.HTTP_201_CREATED)
-def crear_cita(body: CitaCreate) -> CitaRead:
-    return crud_cita.crear(
-        id_mascota=body.id_mascota,
-        id_usuario_agenda=body.id_usuario_agenda,
-        motivo=body.motivo,
-        costo=body.costo,
-        lugar=body.lugar,
-    )
+def crear_cita(body: CitaCreate, db: Session = Depends(get_db)) -> CitaRead:
+    try:
+        return crud_cita.crear(
+            db=db,
+            id_mascota=body.id_mascota,
+            id_usuario_agenda=body.id_usuario_agenda,
+            motivo=body.motivo,
+            costo=body.costo,
+            lugar=body.lugar,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.put("/{id_cita}", response_model=CitaRead)
-def actualizar_cita(id_cita: UUID, body: CitaUpdate) -> CitaRead:
+def actualizar_cita(
+    id_cita: UUID, body: CitaUpdate, db: Session = Depends(get_db)
+) -> CitaRead:
     data = body.model_dump(exclude_unset=True)
-    c = crud_cita.actualizar(id_cita, **data)
+    c = crud_cita.actualizar(db, id_cita, **data)
     if not c:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Cita no encontrada"
@@ -76,8 +90,8 @@ def actualizar_cita(id_cita: UUID, body: CitaUpdate) -> CitaRead:
 
 
 @router.delete("/{id_cita}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_cita(id_cita: UUID) -> None:
-    if not crud_cita.eliminar(id_cita):
+def eliminar_cita(id_cita: UUID, db: Session = Depends(get_db)) -> None:
+    if not crud_cita.eliminar(db, id_cita):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Cita no encontrada"
         )
