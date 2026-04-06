@@ -14,6 +14,9 @@ def crear(
     total: float,
     metodo_pago: str,
 ) -> Factura:
+    """
+    Crea una nueva factura en la base de datos. Lanza ValueError si la cita ya tiene factura.
+    """
     factura_existente = db.query(Factura).filter(Factura.id_cita == id_cita).first()
     if factura_existente:
         raise ValueError("La cita ya tiene una factura asociada")
@@ -31,10 +34,16 @@ def crear(
 
 
 def obtener(db: Session, id_factura: UUID) -> Optional[Factura]:
+    """
+    Retorna una factura por su ID, o None si no existe.
+    """
     return db.query(Factura).filter(Factura.id_factura == id_factura).first()
 
 
 def listar(db: Session, skip: int = 0, limit: int = 100) -> List[Factura]:
+    """
+    Retorna todas las facturas con soporte de paginacion.
+    """
     return db.query(Factura).offset(skip).limit(limit).all()
 
 
@@ -43,6 +52,9 @@ def actualizar(
     id_factura: UUID,
     **kwargs,
 ) -> Optional[Factura]:
+    """
+    Actualiza los campos de una factura existente. Retorna None si no existe.
+    """
     factura = obtener(db, id_factura)
     if not factura:
         return None
@@ -55,6 +67,9 @@ def actualizar(
 
 
 def eliminar(db: Session, id_factura: UUID) -> bool:
+    """
+    Elimina una factura de la base de datos. Retorna True si se elimino, False si no existia.
+    """
     factura = obtener(db, id_factura)
     if not factura:
         return False
