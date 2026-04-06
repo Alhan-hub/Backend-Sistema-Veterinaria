@@ -5,7 +5,6 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, ConfigDict
 
-from .deps import DbSession
 from src.crud import mascota as crud_mascota
 
 router = APIRouter(prefix="/mascotas", tags=["mascotas"])
@@ -42,3 +41,18 @@ class MascotaRead(BaseModel):
     fecha_edicion: Optional[datetime] = None
     id_usuario_creacion: UUID
     id_usuario_edita: Optional[UUID] = None
+
+
+@router.get("", response_model=List[MascotaRead])
+def listar_mascotas() -> List[MascotaRead]:
+    return crud_mascota.obtener_todos()
+
+
+@router.get("/{id_mascota}", response_model=MascotaRead)
+def obtener_mascota(id_mascota: UUID) -> MascotaRead:
+    mascota = crud_mascota.obtener_por_id(id_mascota)
+    if not mascota:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Mascota no encontrada"
+        )
+    return mascota
