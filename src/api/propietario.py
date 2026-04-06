@@ -61,3 +61,13 @@ def crear_propietario(body: PropietarioCreate) -> PropietarioRead:
         id_usuario_creacion=body.id_usuario_creacion,
     )
     return propietario
+
+
+@router.put("/{id_propietario}", response_model=PropietarioRead)
+def actualizar_propietario(id_propietario: UUID, body: PropietarioUpdate):
+    id_edita = body.id_usuario_edita
+    data = body.model_dump(exclude_unset=True, exclude={"id_usuario_edita"})
+    propietario = crud_propietario.actualizar(id_propietario, id_usuario_edita=id_edita, **data)
+    if not propietario:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Propietario no encontrado")
+    return propietario
