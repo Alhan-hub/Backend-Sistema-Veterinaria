@@ -1,10 +1,16 @@
+"""
+Endpoints para la entidad Factura.
+"""
+
 from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict
+from sqlalchemy.orm import Session
 
+from src.database.config import get_db
 from src.crud import factura as crud_factura
 
 router = APIRouter(prefix="/facturas", tags=["facturas"])
@@ -36,13 +42,15 @@ class FacturaRead(BaseModel):
 
 
 @router.get("", response_model=List[FacturaRead])
-def listar_facturas(skip: int = 0, limit: int = 100) -> List[FacturaRead]:
-    return crud_factura.listar(skip=skip, limit=limit)
+def listar_facturas(
+    skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
+) -> List[FacturaRead]:
+    return crud_factura.listar(db, skip=skip, limit=limit)
 
 
 @router.get("/{id_factura}", response_model=FacturaRead)
-def obtener_factura(id_factura: UUID) -> FacturaRead:
-    f = crud_factura.obtener(id_factura)
+def obtener_factura(id_factura: UUID, db: Session = Depends(get_db)) -> FacturaRead:
+    f = crud_factura.obtener(db, id_factura)
     if not f:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Factura no encontrada"
@@ -51,9 +59,10 @@ def obtener_factura(id_factura: UUID) -> FacturaRead:
 
 
 @router.post("", response_model=FacturaRead, status_code=status.HTTP_201_CREATED)
-def crear_factura(body: FacturaCreate) -> FacturaRead:
+def crear_factura(body: FacturaCreate, db: Session = Depends(get_db)) -> FacturaRead:
     try:
         return crud_factura.crear(
+            db=db,
             id_cita=body.id_cita,
             id_propietario=body.id_propietario,
             id_usuario_genera=body.id_usuario_genera,
@@ -65,9 +74,11 @@ def crear_factura(body: FacturaCreate) -> FacturaRead:
 
 
 @router.put("/{id_factura}", response_model=FacturaRead)
-def actualizar_factura(id_factura: UUID, body: FacturaUpdate) -> FacturaRead:
+def actualizar_factura(
+    id_factura: UUID, body: FacturaUpdate, db: Session = Depends(get_db)
+) -> FacturaRead:
     data = body.model_dump(exclude_unset=True)
-    f = crud_factura.actualizar(id_factura, **data)
+    f = crud_factura.actualizar(db, id_factura, **data)
     if not f:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Factura no encontrada"
@@ -76,8 +87,8 @@ def actualizar_factura(id_factura: UUID, body: FacturaUpdate) -> FacturaRead:
 
 
 @router.delete("/{id_factura}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_factura(id_factura: UUID) -> None:
-    if not crud_factura.eliminar(id_factura):
+def eliminar_factura(id_factura: UUID, db: Session = Depends(get_db)) -> None:
+    if not crud_factura.eliminar(db, id_factura):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Factura no encontrada"
         )
