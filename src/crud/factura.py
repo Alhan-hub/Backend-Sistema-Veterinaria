@@ -1,13 +1,13 @@
 from typing import List, Optional
 from uuid import UUID
 
-from src.database.config import SessionLocal
-from src.entities.factura import Factura
+from sqlalchemy.orm import Session
 
-db = SessionLocal()
+from src.entities.factura import Factura
 
 
 def crear(
+    db: Session,
     id_cita: UUID,
     id_propietario: UUID,
     id_usuario_genera: UUID,
@@ -15,12 +15,11 @@ def crear(
     metodo_pago: str,
 ) -> Factura:
     """
-    Crea una nueva factura en la base de datos.
+    Crea una nueva factura en la base de datos. Lanza ValueError si la cita ya tiene factura.
     """
     factura_existente = db.query(Factura).filter(Factura.id_cita == id_cita).first()
     if factura_existente:
         raise ValueError("La cita ya tiene una factura asociada")
-
     factura = Factura(
         id_cita=id_cita,
         id_propietario=id_propietario,
@@ -34,73 +33,46 @@ def crear(
     return factura
 
 
-def obtener_por_id(id_factura: UUID) -> Optional[Factura]:
+def obtener(db: Session, id_factura: UUID) -> Optional[Factura]:
     """
-    Retorna una factura por su ID.
+    Retorna una factura por su ID, o None si no existe.
     """
     return db.query(Factura).filter(Factura.id_factura == id_factura).first()
 
 
-def obtener_todos() -> List[Factura]:
+def listar(db: Session, skip: int = 0, limit: int = 100) -> List[Factura]:
     """
-    Retorna todas las facturas.
+    Retorna todas las facturas con soporte de paginacion.
     """
-    return db.query(Factura).all()
-
-
-def obtener_por_cita(id_cita: UUID) -> Optional[Factura]:
-    """
-    Retorna la factura asociada a una cita especifica.
-    """
-    return db.query(Factura).filter(Factura.id_cita == id_cita).first()
-
-
-def obtener_por_propietario(id_propietario: UUID) -> List[Factura]:
-    """
-    Retorna todas las facturas de un propietario especifico.
-    """
-    return db.query(Factura).filter(Factura.id_propietario == id_propietario).all()
-
-
-def obtener_por_usuario(id_usuario_genera: UUID) -> List[Factura]:
-    """
-    Retorna todas las facturas generadas por un usuario especifico.
-    """
-    return (
-        db.query(Factura).filter(Factura.id_usuario_genera == id_usuario_genera).all()
-    )
+    return db.query(Factura).offset(skip).limit(limit).all()
 
 
 def actualizar(
+    db: Session,
     id_factura: UUID,
-    **kwargs: dict,
+    **kwargs,
 ) -> Optional[Factura]:
     """
-    Actualiza los campos de una factura existente.
+    Actualiza los campos de una factura existente. Retorna None si no existe.
     """
-    factura = obtener_por_id(id_factura)
+    factura = obtener(db, id_factura)
     if not factura:
         return None
-
     for key, value in kwargs.items():
-        if hasattr(factura, key):
-            if isinstance(value, str):
-                value = value.strip()
-            setattr(factura, key, value)
-
+        if hasattr(factura, str(key)) and str(key) != "id_factura":
+            setattr(factura, str(key), value)
     db.commit()
     db.refresh(factura)
     return factura
 
 
-def eliminar(id_factura: UUID) -> bool:
+def eliminar(db: Session, id_factura: UUID) -> bool:
     """
-    Elimina una factura de la base de datos.
+    Elimina una factura de la base de datos. Retorna True si se elimino, False si no existia.
     """
-    factura = obtener_por_id(id_factura)
+    factura = obtener(db, id_factura)
     if not factura:
         return False
-
     db.delete(factura)
     db.commit()
     return True
