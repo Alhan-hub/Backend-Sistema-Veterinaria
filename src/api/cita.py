@@ -17,6 +17,10 @@ router = APIRouter(prefix="/citas", tags=["citas"])
 
 
 class CitaCreate(BaseModel):
+    """
+    Esquema para crear una nueva cita.
+    """
+
     id_mascota: UUID
     id_usuario_agenda: UUID
     motivo: str
@@ -25,6 +29,10 @@ class CitaCreate(BaseModel):
 
 
 class CitaUpdate(BaseModel):
+    """
+    Esquema para actualizar una cita existente.
+    """
+
     motivo: Optional[str] = None
     costo: Optional[float] = None
     lugar: Optional[str] = None
@@ -32,6 +40,10 @@ class CitaUpdate(BaseModel):
 
 
 class CitaRead(BaseModel):
+    """
+    Esquema de respuesta para una cita.
+    """
+
     model_config = ConfigDict(from_attributes=True)
 
     id_cita: UUID
@@ -48,11 +60,17 @@ class CitaRead(BaseModel):
 def listar_citas(
     skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 ) -> List[CitaRead]:
+    """
+    Lista todas las citas con paginacion.
+    """
     return crud_cita.listar(db, skip=skip, limit=limit)
 
 
 @router.get("/{id_cita}", response_model=CitaRead)
 def obtener_cita(id_cita: UUID, db: Session = Depends(get_db)) -> CitaRead:
+    """
+    Obtiene una cita por su ID.
+    """
     c = crud_cita.obtener(db, id_cita)
     if not c:
         raise HTTPException(
@@ -63,6 +81,9 @@ def obtener_cita(id_cita: UUID, db: Session = Depends(get_db)) -> CitaRead:
 
 @router.post("", response_model=CitaRead, status_code=status.HTTP_201_CREATED)
 def crear_cita(body: CitaCreate, db: Session = Depends(get_db)) -> CitaRead:
+    """
+    Crea una nueva cita en el sistema.
+    """
     try:
         return crud_cita.crear(
             db=db,
@@ -80,6 +101,9 @@ def crear_cita(body: CitaCreate, db: Session = Depends(get_db)) -> CitaRead:
 def actualizar_cita(
     id_cita: UUID, body: CitaUpdate, db: Session = Depends(get_db)
 ) -> CitaRead:
+    """
+    Actualiza una cita existente.
+    """
     data = body.model_dump(exclude_unset=True)
     c = crud_cita.actualizar(db, id_cita, **data)
     if not c:
@@ -91,6 +115,9 @@ def actualizar_cita(
 
 @router.delete("/{id_cita}", status_code=status.HTTP_204_NO_CONTENT)
 def eliminar_cita(id_cita: UUID, db: Session = Depends(get_db)) -> None:
+    """
+    Elimina una cita por su ID.
+    """
     if not crud_cita.eliminar(db, id_cita):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Cita no encontrada"
