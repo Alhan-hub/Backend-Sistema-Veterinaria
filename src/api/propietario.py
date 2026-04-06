@@ -51,3 +51,13 @@ def obtener_propietario(id_propietario: UUID) -> PropietarioRead:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Propietario no encontrado")
     return propietario
 
+
+@router.post("", response_model=PropietarioRead, status_code=status.HTTP_201_CREATED)
+def crear_propietario(body: PropietarioCreate) -> PropietarioRead:
+    propietario = crud_propietario.crear(
+        nombre=body.nombre,
+        telefono=body.telefono,
+        email=body.email,
+        id_usuario_creacion=body.id_usuario_creacion,
+    )
+    return propietario
