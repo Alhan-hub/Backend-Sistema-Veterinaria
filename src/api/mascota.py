@@ -56,3 +56,16 @@ def obtener_mascota(id_mascota: UUID) -> MascotaRead:
             status_code=status.HTTP_404_NOT_FOUND, detail="Mascota no encontrada"
         )
     return mascota
+
+
+@router.post("", response_model=MascotaRead, status_code=status.HTTP_201_CREATED)
+def crear_mascota(body: MascotaCreate) -> MascotaRead:
+    mascota = crud_mascota.crear(
+        nombre=body.nombre,
+        id_propietario=body.id_propietario,
+        id_usuario_creacion=body.id_usuario_creacion,
+        edad=body.edad,
+        tipo_mascota=body.tipo_mascota,
+        raza=body.raza,
+    )
+    return mascota
