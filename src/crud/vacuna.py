@@ -56,13 +56,3 @@ def eliminar(id_vacuna: UUID) -> bool:
     db.delete(vacuna)
     db.commit()
     return True
-
-
-def existe_vacuna_para_mascota(id_mascota: UUID, nombre: str) -> bool:
-    nombre = nombre.strip()
-    return (
-        db.query(Vacuna)
-        .filter(Vacuna.id_mascota == id_mascota, Vacuna.nombre == nombre)
-        .first()
-        is not None
-    )
