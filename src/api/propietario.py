@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, ConfigDict
 
 from .deps import DbSession
-from src.crud import pedido as crud_pedido
+from src.crud import propietario as crud_propietario
 
 router = APIRouter(prefix="/propietarios", tags=["propietarios"])
 
@@ -37,3 +37,17 @@ class PropietarioRead(BaseModel):
     fecha_edicion: Optional[datetime] = None
     id_usuario_creacion: UUID
     id_usuario_edita: Optional[UUID] = None
+
+
+@router.get("", response_model=List[PropietarioRead])
+def listar_propietarios(db: DbSession, skip: int = 0, limit: int = 100) -> List[PropietarioRead]:
+    return crud_propietario.obtener_todos(db, skip=skip, limit=limit)
+
+
+@router.get("/{id_propietario}", response_model=PropietarioRead)
+def obtener_propietario(id_propietario: UUID) -> PropietarioRead:
+    propietario = crud_propietario.obtener_por_id(id_propietario)
+    if not propietario:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Propietario no encontrado")
+    return propietario
+
