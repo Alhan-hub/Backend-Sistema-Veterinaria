@@ -31,7 +31,7 @@ def obtener_por_id(id_propietario: UUID) -> Optional[Propietario]:
     return db.query(Propietario).filter(Propietario.id_propietario == id_propietario).first()
 
 
-def obtener_todos(db: Session, skip: int = 0, limit: int = 100) -> List[Propietario]:
+def obtener_todos(skip: int = 0, limit: int = 100) -> List[Propietario]:
     return db.query(Propietario).offset(skip).limit(limit).all()
 
 

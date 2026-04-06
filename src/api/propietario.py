@@ -5,7 +5,6 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, ConfigDict
 
-from .deps import DbSession
 from src.crud import propietario as crud_propietario
 
 router = APIRouter(prefix="/propietarios", tags=["propietarios"])
@@ -39,8 +38,8 @@ class PropietarioRead(BaseModel):
 
 
 @router.get("", response_model=List[PropietarioRead])
-def listar_propietarios(db: DbSession, skip: int = 0, limit: int = 100) -> List[PropietarioRead]:
-    return crud_propietario.obtener_todos(db, skip=skip, limit=limit)
+def listar_propietarios(skip: int = 0, limit: int = 100) -> List[PropietarioRead]:
+    return crud_propietario.obtener_todos(skip=skip, limit=limit)
 
 
 @router.get("/{id_propietario}", response_model=PropietarioRead)
