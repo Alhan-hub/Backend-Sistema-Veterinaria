@@ -71,3 +71,9 @@ def actualizar_propietario(id_propietario: UUID, body: PropietarioUpdate):
     if not propietario:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Propietario no encontrado")
     return propietario
+
+
+@router.delete("/{id_propietario}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_propietario(id_propietario: UUID) -> None:
+    if not crud_propietario.eliminar(id_propietario):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Propietario no encontrado")
