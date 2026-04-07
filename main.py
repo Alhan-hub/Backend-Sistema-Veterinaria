@@ -1,24 +1,27 @@
 from fastapi import FastAPI
 import uvicorn
 
-from src.api import usuario, propietario, mascota, cita, factura, vacuna
+from src.api import cita, factura, mascota, usuario, vacuna, propietario
 
 app = FastAPI(
-    title="API Veterinaria - Sistema REST",
-    description="Orquestador central de servicios con trazabilidad y persistencia en Neon DB",
+    title="API Veterinaria REST",
+    description="Orquestador central para la gestión de la clínica veterinaria.",
     version="4.0.0"
 )
 
-app.include_router(usuario.router, prefix="/usuarios", tags=["Gestión de Usuarios"])
-app.include_router(propietario.router, prefix="/propietarios", tags=["Propietarios"])
-app.include_router(mascota.router, prefix="/mascotas", tags=["Pacientes (Mascotas)"])
-app.include_router(cita.router, prefix="/citas", tags=["Agenda de Citas"])
-app.include_router(factura.router, prefix="/facturas", tags=["Facturación"])
-app.include_router(vacuna.router, prefix="/vacunas", tags=["Control Sanitario"])
+app.include_router(propietario.router)
+app.include_router(mascota.router)
+app.include_router(cita.router)
+app.include_router(factura.router)
+app.include_router(usuario.router, tags=["usuarios"])
+app.include_router(vacuna.router, tags=["vacunas"])
 
-@app.get("/")
-def home():
+@app.get("/", tags=["General"])
+def root():
     return {
-        "status": "API Operativa",
-        "mensaje": "Bienvenido al Sistema Veterinaria. Accede a /docs para ver la documentación Swagger."
+        "status": "online",
+        "mensaje": "Bienvenido al Sistema Veterinaria. Visita /docs para probar los endpoints."
     }
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
