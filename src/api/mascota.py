@@ -69,3 +69,17 @@ def crear_mascota(body: MascotaCreate) -> MascotaRead:
         raza=body.raza,
     )
     return mascota
+
+
+@router.put("/{id_mascota}", response_model=MascotaRead)
+def actualizar_mascota(id_mascota: UUID, body: MascotaUpdate):
+    id_edita = body.id_usuario_edita
+    data = body.model_dump(exclude_unset=True, exclude={"id_usuario_edita"})
+    mascota = crud_mascota.actualizar(
+        id_mascota, id_usuario_edita=id_edita, **data
+    )
+    if not mascota:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Mascota no encontrada"
+        )
+    return mascota
