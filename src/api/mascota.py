@@ -83,3 +83,12 @@ def actualizar_mascota(id_mascota: UUID, body: MascotaUpdate):
             status_code=status.HTTP_404_NOT_FOUND, detail="Mascota no encontrada"
         )
     return mascota
+
+
+@router.delete("/{id_mascota}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_mascota(id_mascota: UUID) -> None:
+    if not crud_mascota.eliminar(id_mascota):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Mascota no encontrada"
+        )
+    return None
