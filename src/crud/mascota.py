@@ -34,8 +34,8 @@ def obtener_por_id(id_mascota: UUID) -> Optional[Mascota]:
     return db.query(Mascota).filter(Mascota.id_mascota == id_mascota).first()
 
 
-def obtener_todos() -> List[Mascota]:
-    return db.query(Mascota).all()
+def obtener_todos(skip: int = 0, limit: int = 100) -> List[Mascota]:
+    return db.query(Mascota).offset(skip).limit(limit).all()
 
 
 def actualizar(
