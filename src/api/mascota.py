@@ -25,7 +25,7 @@ class MascotaUpdate(BaseModel):
     edad: Optional[int] = None
     tipo_mascota: Optional[str] = None
     raza: Optional[str] = None
-    id_usuario_edita: Optional[UUID] = None
+    id_usuario_edita:UUID
 
 
 class MascotaRead(BaseModel):
