@@ -1,32 +1,43 @@
 # 🐾 Sistema de Gestión Veterinaria
 
-Sistema desarrollado en **Python** para la administración básica de una veterinaria. Permite gestionar usuarios, propietarios, mascotas (perros, gatos y aves como tipos) y realizar operaciones como registro de vacunas, agendamiento de citas y generación de facturas.
+Sistema desarrollado en **Python** para la administración básica de una veterinaria. Permite gestionar usuarios, propietarios, mascotas (perros, gatos y aves como tipos) y operaciones como registro de vacunas, agendamiento de citas y generación de facturas.
 
 ## Estado del proyecto
 
-Es un sistema **CLI (consola)** que opera directamente contra la base de datos configurada en `DATABASE_URL` (por ejemplo, Neon). La lógica de persistencia está implementada con **SQLAlchemy**.
+La aplicación se expone como **API REST con FastAPI**. La ejecución principal está en `main.py`, que define la aplicación, registra los routers de cada entidad y arranca el servidor con **Uvicorn**. La persistencia sigue basada en **SQLAlchemy (ORM)** y en la `DATABASE_URL` configurada (por ejemplo, Neon).
+
+Los cuerpos de entrada y las respuestas HTTP se modelan con **Pydantic** (esquemas definidos junto a los endpoints en `src/api/`).
 
 ## Requisitos
 
 - Python `3.10+` (recomendado)
-- Acceso a una base de datos compatible con Neon con una `DATABASE_URL` (usada por SQLAlchemy)
+- Acceso a una base de datos PostgreSQL compatible (por ejemplo Neon) con `DATABASE_URL` en `.env`
 - Dependencias del proyecto (ver `requirements.txt`):
   - `sqlalchemy`
   - `psycopg2-binary`
-  - `pydantic`
+  - `pydantic` (incluye extras de email)
   - `python-dotenv`
+  - `fastapi`
+  - `uvicorn[standard]`
 
 ## Estructura del proyecto
 
 ```text
 Backend-Sistema-Veterinaria/
-├── main.py
+├── main.py                 # FastAPI + registro de routers + arranque con Uvicorn
 ├── init_db.py
 ├── requirements.txt
-├── .env                 # configuración local (no se debe versionar)
+├── .env                    # configuración local (no se debe versionar)
 └── src/
+    ├── api/                # routers REST y esquemas Pydantic por recurso
+    │   ├── propietario.py
+    │   ├── mascota.py
+    │   ├── cita.py
+    │   ├── factura.py
+    │   ├── usuario.py
+    │   └── vacuna.py
     ├── database/
-    │   └── config.py     # carga .env y crea engine + sesión
+    │   └── config.py       # .env, engine, SessionLocal, get_db, create_tables
     ├── crud/
     │   ├── usuario.py
     │   ├── propietario.py
@@ -52,6 +63,7 @@ El proyecto **obliga** a definir `DATABASE_URL` en un archivo `.env` en la raíz
 - `load_dotenv()` para cargar variables desde `.env`
 - `DATABASE_URL = os.getenv("DATABASE_URL")`
 - si `DATABASE_URL` no existe, lanza: `ValueError("Se requiere DATABASE_URL en el archivo .env")`
+- expone `get_db()` como dependencia de FastAPI para sesiones por petición (usado en varios routers)
 
 ### Ejemplo de `.env`
 
@@ -68,7 +80,7 @@ Notas:
 
 ## Inicializar tablas en la base de datos
 
-Antes de ejecutar el sistema por primera vez, se debe crear el esquema en Neon mediante SQLAlchemy con `init_db.py`:
+Antes de levantar la API por primera vez, crear el esquema en la base con `init_db.py`:
 
 ```powershell
 python init_db.py
@@ -78,7 +90,7 @@ Este script llama a `create_tables()` (SQLAlchemy `Base.metadata.create_all(...)
 
 Si falla con un error de autenticación, `init_db.py` muestra una guía específica (incluye revisar el connection string y codificar caracteres especiales si aplica).
 
-## Instalación y ejecución (CLI)
+## Instalación y ejecución (API)
 
 ### 1) Crear entorno virtual (Windows / PowerShell)
 
@@ -94,82 +106,66 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 3) Ejecutar el sistema
+### 3) Ejecutar la aplicación
+
+Desde la raíz del proyecto:
 
 ```powershell
 python main.py
 ```
 
-## Ejecución de `main.py` (flujo completo)
+Equivale a servir la app `main:app` con Uvicorn en `http://127.0.0.1:8000` y recarga automática en desarrollo (`reload=True`).
 
-Al iniciar, `main.py`:
+También puede usarse Uvicorn directamente:
 
-1. Muestra el menú `--- ACCESO AL SISTEMA VETERINARIO ---`.
-2. Pide `Nombre de usuario (login): `.
-3. Busca el usuario por `nombre_usuario`.
-4. Si **no existe**, crea un usuario inicial con:
-   - `clave`: `admin123`
-   - `email`: `"{u_nom}@vet.com"`
-   - `nombre_usuario`: normalizado a minúsculas
-5. Luego muestra el menú principal:
-   - `1. Gestionar Propietarios (CRUD)`
-   - `2. Gestionar Mascotas (CRUD)`
-   - `3. Agendar Cita y Facturar`
-   - `4. Registro de Vacunas`
-   - `5. Salir`
+```powershell
+uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```
+
+## Documentación interactiva (Swagger / OpenAPI)
+
+FastAPI genera automáticamente la especificación OpenAPI y la interfaz **Swagger UI**:
+
+- **Swagger UI:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+- **ReDoc:** [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+
+Ahí se documentan y pueden probarse los endpoints (métodos HTTP, cuerpos JSON, respuestas y códigos de estado).
+
+### Ruta raíz
+
+- `GET /` — estado del servicio y enlace a la documentación.
+
+## Endpoints por entidad (REST)
+
+Convención general: **GET** lista y por id, **POST** creación, **PUT** actualización, **DELETE** eliminación (salvo detalles indicados). Las rutas base asumen el prefijo vacío (`/`); los IDs son **UUID** salvo que el cliente envíe otro formato válido.
+
+| Entidad | Lista | Por id | Crear | Actualizar | Eliminar |
+|--------|--------|--------|--------|------------|----------|
+| **Propietarios** | `GET /propietarios` | `GET /propietarios/{id}` | `POST /propietarios` | `PUT /propietarios/{id}` | `DELETE /propietarios/{id}` |
+| **Mascotas** | `GET /mascotas` | `GET /mascotas/{id}` | `POST /mascotas` | `PUT /mascotas/{id}` | `DELETE /mascotas/{id}` |
+| **Citas** | `GET /citas` | `GET /citas/{id}` | `POST /citas` | `PUT /citas/{id}` | `DELETE /citas/{id}` |
+| **Facturas** | `GET /facturas` | `GET /facturas/{id}` | `POST /facturas` | `PUT /facturas/{id}` | `DELETE /facturas/{id}` |
+| **Usuarios** | `GET /usuarios` | `GET /usuarios/{usuario_id}` | `POST /usuarios` | `PUT /usuarios/{usuario_id}` | `DELETE /usuarios/{usuario_id}` |
+| **Vacunas** | `GET /vacunas` | `GET /vacunas/{vacuna_id}` | `POST /vacunas` | `PUT /vacunas/{vacuna_id}` | `DELETE /vacunas/{vacuna_id}` |
+
+**Notas:**
+
+- **Propietarios** y **mascotas:** creación/actualización requieren `id_usuario_creacion` / `id_usuario_edita` según el esquema en Swagger.
+- **Citas** y **facturas:** estado inicial de cita y reglas de negocio (p. ej. una factura por cita) están en la capa CRUD; errores de validación pueden responder **400** con detalle en el cuerpo.
+- **Usuarios:** **POST** valida unicidad de `nombre_usuario` y `email`.
+- **Vacunas:** existe además `GET /vacunas/mascota/{mascota_id}` para listar vacunas de una mascota.
+
+Los detalles de cada campo (JSON de entrada/salida) están en **Swagger** (`/docs`).
+
+## Configuración principal del API (`main.py`)
+
+En `main.py` se define el objeto `FastAPI` (título, descripción, versión), se incluyen los routers de `src.api` y, bajo `if __name__ == "__main__"`, se invoca `uvicorn.run("main:app", ...)`. Cualquier ajuste global de la API (metadata, CORS futuro, routers adicionales) conviene centralizarlo ahí.
 
 ## Importante: Video del enunciado
 
-El siguiente video muestra la explicación del CRUD de `propietario` y cómo los cambios se reflejan en Neon, además del funcionamiento del `main.py` en consola:
+El siguiente video muestra la explicación del CRUD de `propietario`, cómo los cambios se reflejan en Neon y el uso de la API con FastAPI (incluida la documentación en Swagger):
 
-[Ver video en YouTube](https://youtu.be/qouxJlBQ0lk)
-
-## Menú: opciones y qué hace cada una
-
-### 1) Gestionar Propietarios (CRUD)
-
-Submenú:
-
-- `1` Crear: se solicitan `Nombre` y `Teléfono`, y se crea un `Propietario` asociado al usuario logueado.
-- `2` Listar: se imprimen todos los propietarios (ID, nombre y creador).
-- `3` Editar: se solicita `ID del propietario (UUID)` y `Nuevo teléfono`, y se actualiza solo ese campo.
-- `4` Eliminar: se solicita `ID a eliminar (UUID)` y se elimina el propietario.
-
-### 2) Gestionar Mascotas (CRUD)
-
-- En `main.py` se implementa principalmente la creación:
-  - se solicitan `Nombre mascota`, `ID Propietario (UUID)`, `Tipo (Perro/Gato/Ave)` y `Edad`.
-  - se crea la mascota asociada al propietario.
-
-Nota: el campo `tipo_mascota` se guarda como texto; el sistema no impone restricciones estrictas más allá de lo que ingreses.
-
-### 3) Agendar Cita y Facturar
-
-Flujo:
-
-- se solicita `ID Mascota (UUID)`, `Motivo` y `Costo`
-- se crea una `Cita` con estado inicial `pendiente`
-- se genera una `Factura`
-
-Importante (posible inconsistencia):
-
-En `main.py`, al crear la factura se pasa como argumento el `id_propietario` usando `nueva_cita.id_mascota` (ID de mascota), aunque `Factura` espera un `id_propietario` (Foreign Key a `propietario.id_propietario`).
-
-Si la base de datos tiene restricciones FK estrictas, esto podría provocar un error al guardar la factura. En caso de error, debe revisarse esa parte del flujo en `main.py` y pasarse el ID correcto del propietario.
-
-### 4) Registro de Vacunas
-
-- se solicita `Nombre Vacuna`, `ID Mascota (UUID)` y `Costo`
-- se crea una `Vacuna` asociada a la mascota y al usuario que registra.
-
-### 5) Salir
-
-- finaliza la ejecución.
-
-## Validaciones de entrada
-
-- `UUID`: se valida de forma básica verificando longitud (36) y guiones (4). Se debe ingresar un UUID con formato estándar.
-- `Costo`: se valida como número decimal manualmente (permite hasta un punto decimal).
+[Ver video en YouTube](https://youtu.be/VgQHMOsCV54)
 
 ## Modelo de datos (tablas principales)
 
@@ -243,15 +239,16 @@ Si la base de datos tiene restricciones FK estrictas, esto podría provocar un e
 Este proyecto fue desarrollado con fines educativos para aplicar:
 
 - Programación Orientada a Objetos (POO)
-- SQLAlchemy + persistencia
-- SQLAlchemy ORM (modelos declarativos con `declarative_base`, sesiones con `SessionLocal` y consultas con `db.query`)
+- SQLAlchemy + persistencia y ORM (modelos declarativos, sesiones, CRUD)
+- **API REST con FastAPI** (routers, dependencias, códigos HTTP)
+- **Esquemas de validación y serialización con Pydantic**
+- **Documentación automática OpenAPI / Swagger UI**
 - Tipos de mascotas (por ejemplo: `Perro`, `Gato`, `Ave`) almacenados como texto en `tipo_mascota`
-- Modularización (CRUD + Entities + Database config)
-- Validaciones manuales en consola
+- Modularización (`src/api`, `crud`, `entities`, `database`)
 
 ## Solución de problemas rápida
 
-- `Se requiere DATABASE_URL en el archivo .env`: se debe crear el archivo `.env` en la raíz y definir `DATABASE_URL`.
-- Fallo al conectar a Neon en `init_db.py`: debe verificarse el connection string y actualizarse el `.env` (incluye posibles caracteres especiales en la URL).
-- Error por “tablas no existen”: se debe ejecutar `python init_db.py` antes de `python main.py`.
-- Error al crear factura: debe revisarse el flujo de `main.py` en la opción `3` (puede estar enviando un `id_propietario` incorrecto).
+- `Se requiere DATABASE_URL en el archivo .env`: crear `.env` en la raíz y definir `DATABASE_URL`.
+- Fallo al conectar a Neon en `init_db.py`: verificar el connection string y actualizar `.env` (incluye caracteres especiales en la URL).
+- Error por “tablas no existen”: ejecutar `python init_db.py` antes de levantar la API.
+- El servidor no inicia o el puerto está ocupado: cambiar el puerto en `uvicorn.run(...)` o en la línea de comandos de Uvicorn (`--port`).
