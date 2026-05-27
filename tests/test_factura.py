@@ -11,32 +11,24 @@ from src.crud.propietario import crear as crear_propietario
 
 
 def crear_cita_aux(db_session: Session) -> tuple[str, str, str]:
-    """Crea una cita con sus dependencias auxiliares."""
-    # Usuario
     usuario = crear_usuario(
-        db_session,
         nombre="Test",
         nombre_usuario=f"test_{uuid.uuid4().hex[:8]}",
         email=f"test_{uuid.uuid4().hex[:8]}@test.com",
         clave="1234",
     )
-    # Propietario
     propietario = crear_propietario(
-        db_session,
         nombre="Dueño Test",
-        telefono="123456",
         id_usuario_creacion=usuario.id_usuario,
+        telefono="123456",
     )
-    # Mascota
     mascota = crear_mascota(
-        db_session,
         nombre="Firulais",
         id_propietario=propietario.id_propietario,
         id_usuario_creacion=usuario.id_usuario,
         edad=2,
         tipo_mascota="Perro",
     )
-    # Cita
     cita = crear_cita(
         db_session,
         id_mascota=mascota.id_mascota,
