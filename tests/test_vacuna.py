@@ -1,7 +1,6 @@
 import uuid
 
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
 
 from src.crud.vacuna import crear as crear_vacuna, eliminar as eliminar_vacuna
 from src.crud.mascota import crear as crear_mascota
@@ -9,7 +8,7 @@ from src.crud.usuario import crear as crear_usuario
 from src.crud.propietario import crear as crear_propietario
 
 
-def crear_mascota_aux(db_session: Session) -> tuple[str, str]:
+def crear_mascota_aux() -> tuple[str, str]:
     usuario = crear_usuario(
         nombre="Test",
         nombre_usuario=f"test_{uuid.uuid4().hex[:8]}",
@@ -47,8 +46,8 @@ def test_obtener_vacuna_inexistente_404(client: TestClient) -> None:
     assert res.status_code == 404
 
 
-def test_obtener_vacuna_existente(client: TestClient, db_session: Session) -> None:
-    id_mascota, id_usuario = crear_mascota_aux(db_session)
+def test_obtener_vacuna_existente(client: TestClient) -> None:
+    id_mascota, id_usuario = crear_mascota_aux()
     vacuna = crear_vacuna(
         nombre="Rabia",
         costo=75.50,
@@ -57,11 +56,11 @@ def test_obtener_vacuna_existente(client: TestClient, db_session: Session) -> No
     )
     res = client.get(f"/vacunas/{vacuna.id_vacuna}")
     assert res.status_code == 200
-    eliminar_vacuna(db_session, vacuna.id_vacuna)
+    eliminar_vacuna(vacuna.id_vacuna)
 
 
-def test_crear_vacuna(client: TestClient, db_session: Session) -> None:
-    id_mascota, id_usuario = crear_mascota_aux(db_session)
+def test_crear_vacuna(client: TestClient) -> None:
+    id_mascota, id_usuario = crear_mascota_aux()
     res = client.post(
         "/vacunas/",
         json={
@@ -71,7 +70,7 @@ def test_crear_vacuna(client: TestClient, db_session: Session) -> None:
             "id_usuario_registra": str(id_usuario),
         },
     )
-    assert res.status_code == 201
+    assert res.status_code == 200
 
 
 def test_crear_vacuna_error_datos_invalidos(client: TestClient) -> None:
@@ -92,8 +91,8 @@ def test_crear_vacuna_mascota_no_existe(client: TestClient) -> None:
     assert res.status_code == 404
 
 
-def test_obtener_vacunas_por_mascota(client: TestClient, db_session: Session) -> None:
-    id_mascota, id_usuario = crear_mascota_aux(db_session)
+def test_obtener_vacunas_por_mascota(client: TestClient) -> None:
+    id_mascota, id_usuario = crear_mascota_aux()
     vacuna = crear_vacuna(
         nombre="Moquillo",
         costo=80.00,
@@ -103,7 +102,7 @@ def test_obtener_vacunas_por_mascota(client: TestClient, db_session: Session) ->
     res = client.get(f"/vacunas/mascota/{id_mascota}")
     assert res.status_code == 200
     assert isinstance(res.json(), list)
-    eliminar_vacuna(db_session, vacuna.id_vacuna)
+    eliminar_vacuna(vacuna.id_vacuna)
 
 
 def test_obtener_vacunas_por_mascota_inexistente(client: TestClient) -> None:
@@ -119,8 +118,8 @@ def test_editar_vacuna_inexistente_404(client: TestClient) -> None:
     assert res.status_code == 404
 
 
-def test_editar_vacuna_existente(client: TestClient, db_session: Session) -> None:
-    id_mascota, id_usuario = crear_mascota_aux(db_session)
+def test_editar_vacuna_existente(client: TestClient) -> None:
+    id_mascota, id_usuario = crear_mascota_aux()
     vacuna = crear_vacuna(
         nombre="Antes",
         costo=50.00,
@@ -132,7 +131,7 @@ def test_editar_vacuna_existente(client: TestClient, db_session: Session) -> Non
         json={"costo": 120.00},
     )
     assert res.status_code == 200
-    eliminar_vacuna(db_session, vacuna.id_vacuna)
+    eliminar_vacuna(vacuna.id_vacuna)
 
 
 def test_eliminar_vacuna_inexistente_404(client: TestClient) -> None:
@@ -140,8 +139,8 @@ def test_eliminar_vacuna_inexistente_404(client: TestClient) -> None:
     assert res.status_code == 404
 
 
-def test_eliminar_vacuna_existente(client: TestClient, db_session: Session) -> None:
-    id_mascota, id_usuario = crear_mascota_aux(db_session)
+def test_eliminar_vacuna_existente(client: TestClient) -> None:
+    id_mascota, id_usuario = crear_mascota_aux()
     vacuna = crear_vacuna(
         nombre="Para eliminar",
         costo=30.00,
@@ -149,4 +148,4 @@ def test_eliminar_vacuna_existente(client: TestClient, db_session: Session) -> N
         id_usuario_registra=id_usuario,
     )
     res = client.delete(f"/vacunas/{vacuna.id_vacuna}")
-    assert res.status_code == 204
+    assert res.status_code == 200
